@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <style>
+        html, body {
+            height: 90%;
+        }
+        chart-area {
+            display: flex;
+            flex-flow: row wrap;
+            justify-content: flex-start;
+            height: 100%;
+            background: blue;
+            /*align-content: flex-start;*/
+        }
+        chart {
+            flex-grow: 1;
+            background: tomato;
+            padding: 5px;
+            color: white;
+            margin: 10px;
+            width: 40%;
+            max-width: 50%;
+            /*height: 50%;*/
+        }
+        input:invalid {
+            background: yellow;
+            color: aqua;
+        }
+    </style>
+</head>
+<body>
+<chart-area>
+    <chart>ch1</chart>
+    <chart>ch1</chart>
+    <chart>ch1</chart>
+    <chart>ch1</chart>
+</chart-area>
+</body>
+</html>
