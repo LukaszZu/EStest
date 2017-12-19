@@ -4,7 +4,7 @@ package zz.test
 import java.beans.Transient
 import java.util
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.databind.{JsonNode, ObjectMapper}
 import org.apache.spark.SparkConf
 import org.apache.spark.sql.SparkSession
 import org.elasticsearch.hadoop.rest.Request.Method._
@@ -21,7 +21,7 @@ class SomethingUtils(sparkConf: SparkConf) extends Serializable {
 
   import SomethingUtils._
 
-  @transient lazy val sm = {
+  def sm() = {
     val sm = new SparkSettingsManager().load(sparkConf)
     new NetworkClient(sm)
   }
@@ -39,34 +39,19 @@ class SomethingUtils(sparkConf: SparkConf) extends Serializable {
     response
   }
 
-  def aggregateAndGet(indexName: String, q: String): Response = {
-    val response = sm.execute(new SimpleRequest(GET, null, s"$indexName/_search", searchRequest(q)))
-    response
+  def aggregateAndGet(indexName: String, q: String): JsonNode = {
+//    val sm = new SparkSettingsManager().load(sparkConf)
+    println("ddd")
+    val nc = sm()
+    try {
+      val response = nc.execute(new SimpleRequest(GET, null, s"$indexName/_search", searchRequest(q)))
+      val s = om.readTree(response.body())
+      s
+    } finally {
+      nc.close()
+    }
   }
 
-  def getAggs(fieldName: String): String = {
-    val template =
-      s"""
-         |{
-         |  "size":0,
-         |  "query": {
-         |    "match_all": {}
-         |  },
-         |  "aggs": {
-         |    "1": {
-         |      "terms": {
-         |        "field": "$fieldName"
-         |      }
-         |    }
-         |  }
-         |}
-    """.stripMargin
-    val resource = aggregateAndGet("shakespeare", template)
-    val s = om.readTree(resource.body())
-    //  println(s)
-    val aggs = s.get("aggregations").get("1").get("buckets")
-    aggs.toString
-  }
 
   def execute(indexName: String, q: QueryBuilder) = {
 
@@ -112,7 +97,7 @@ class SomethingUtils(sparkConf: SparkConf) extends Serializable {
 
 
 object SomethingUtils {
-  @transient private var instance: SomethingUtils = _
+  private var instance: SomethingUtils = _
 
   def apply()(implicit sparkConf: SparkConf): SomethingUtils = {
     if (instance == null)
